@@ -4,7 +4,7 @@
 // @version      1.0
 // @description  Automatically login to SaveLend
 // @author       Lukas Wiklund
-// @match        https://invest.savelend.se/
+// @match        https://invest.savelend.se
 // @match        https://invest.savelend.se/loginWith*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=savelend.se
 // @require      https://jiangts.github.io/JS-OTP/dist/jsOTP.min.js
