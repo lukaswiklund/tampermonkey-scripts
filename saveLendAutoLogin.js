@@ -18,43 +18,18 @@ const config = {
 }
 
 async function main() {
-	const response = await fetch(
-		"https://reloansys-prod.azurewebsites.net/api/savelend/account/begin-credential-login",
-		{
-			method: "POST",
-			mode: "cors",
-			credentials: "include",
-			headers: {
-				accept: "application/json",
-				"content-type": "application/json",
-			},
-			body: JSON.stringify({
-				Username: config.username,
-				Password: config.password,
-			}),
-		}
-	)
+	if (!["/", "/loginWith"].includes(window.location.pathname)) return
 
-	if (!response.ok) return
+	const { access_token } = await fetchAPI("/account/begin-credential-login", {
+		method: "POST",
+		body: { Username: config.username, Password: config.password },
+	})
 
-	const { access_token } = await response.json()
-
-	const totpResponse = await fetch(
-		"https://reloansys-prod.azurewebsites.net/api/savelend/account/finalize-credential-login",
-		{
-			method: "POST",
-			headers: {
-				accept: "application/json",
-				authorization: `Bearer ${access_token}`,
-				"content-type": "application/json",
-			},
-			body: JSON.stringify({ AuthCode: new jsOTP.totp().getOtp(config.totpToken) }),
-		}
-	)
-
-	if (!response.ok) return
-
-	const data = await totpResponse.json()
+	const data = await fetchAPI("/account/finalize-credential-login", {
+		method: "POST",
+		headers: { authorization: `Bearer ${access_token}` },
+		body: { AuthCode: new jsOTP.totp().getOtp(config.totpToken) },
+	})
 
 	window.sessionStorage.setItem(
 		"savelend.usr.reloansys",
@@ -67,6 +42,25 @@ async function main() {
 	)
 
 	window.location.href = "/dashboard/overview"
+}
+
+async function fetchAPI(url, options) {
+	const response = await fetch("https://reloansys-prod.azurewebsites.net/api/savelend" + url, {
+		method: options?.method ?? "GET",
+		mode: "cors",
+		credentials: "include",
+		headers: {
+			...options?.headers,
+			accept: "application/json",
+			"content-type": "application/json",
+		},
+		body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
+	})
+	if (!response.ok) {
+		alert("Failed to sign in.")
+		throw new Error("Failed to sign in.")
+	}
+	return response.json()
 }
 
 main()

@@ -16,42 +16,33 @@ const config = {
 	totpToken: "<< FILL IN >>",
 }
 
-;(async function () {
-	const response = await fetch("/_api/personalization/is-customer-activated", {
-		mode: "cors",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/json;charset=UTF-8",
-		},
-	})
+async function main() {
+	if (window.location.pathname !== "/start") return
 
-	if (response.ok) return
-
-	await fetch("/_api/authentication/sessions/usercredentials", {
+	await fetchAPI("/authentication/sessions/usercredentials", {
 		method: "POST",
-		mode: "cors",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/json;charset=UTF-8",
-		},
-		body: JSON.stringify({
-			username: config.username,
-			password: config.password,
-		}),
+		body: { username: config.username, password: config.password },
 	})
-
-	await fetch("/_api/authentication/sessions/totp", {
+	await fetchAPI("/authentication/sessions/totp", {
 		method: "POST",
-		mode: "cors",
-		credentials: "include",
-		headers: {
-			"Content-Type": "application/json;charset=UTF-8",
-		},
-		body: JSON.stringify({
-			method: "TOTP",
-			totpCode: new jsOTP.totp().getOtp(config.totpToken),
-		}),
+		body: { method: "TOTP", totpCode: new jsOTP.totp().getOtp(config.totpToken) },
 	})
 
 	window.location.href = "/hem/senaste.html"
-})()
+}
+
+async function fetchAPI(url, options) {
+	const response = await fetch("/_api" + url, {
+		method: options?.method ?? "GET",
+		mode: "cors",
+		credentials: "include",
+		headers: { "Content-Type": "application/json;charset=UTF-8" },
+		body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
+	})
+	if (!response.ok) {
+		alert("Failed to sign in.")
+		throw new Error("Failed to sign in.")
+	}
+}
+
+main()
