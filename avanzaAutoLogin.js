@@ -17,7 +17,8 @@ const config = {
 }
 
 async function main() {
-	if (window.location.pathname !== "/start") return
+	const response = await fetch("/_cqbe/authentication/session").then(x => x.json())
+	if (response.user.loggedIn) return
 
 	await fetchAPI("/authentication/sessions/usercredentials", {
 		method: "POST",
